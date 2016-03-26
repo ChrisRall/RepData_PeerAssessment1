@@ -1,80 +1,98 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
-```{r echo=TRUE}
+
+```r
 library(plyr)
 library(ggplot2)
+```
 
+```
+## Warning: package 'ggplot2' was built under R version 3.2.3
+```
+
+```r
 activity<-read.csv("./activity.csv")
-
 ```
 
 
 ## What is mean total number of steps taken per day?
 First, I'll calculate the total number of steps taken during each day:
-```{r echo=TRUE}
-sums<-ddply(activity, .(date), summarize, val = sum(steps))
 
+```r
+sums<-ddply(activity, .(date), summarize, val = sum(steps))
 ```
 Next, generate a histogram of the total number of steps taken per day:
-```{r echo=TRUE}
-hist(sums$val, main="Steps taken Per Day", xlab="Total Steps Taken Per Day")
 
+```r
+hist(sums$val, main="Steps taken Per Day", xlab="Total Steps Taken Per Day")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)
+
 Finally, we'll calculate the Mean and Median number of steps taken.
-```{r echo=TRUE}
+
+```r
 meanSteps<-mean(sums$val, na.rm=TRUE)
 medianSteps<-median(sums$val, na.rm=TRUE)
-
 ```
 
 The Mean number of steps taken is 
-```{r echo=FALSE} 
-meanSteps 
+
+```
+## [1] 10766.19
 ```
 and the Median number of steps taken is
-```{r echo=FALSE}
-medianSteps
+
+```
+## [1] 10765
 ```
 
 ## What is the average daily activity pattern?
 Generate a time series plot of average steps by time interval across all days:
-```{r echo=TRUE}
+
+```r
 #calc mean number of steps by time interval
 avgSteps<-aggregate(steps ~ interval, activity, mean)
 
 #plot results
 plot(avgSteps$interval, avgSteps$steps, type='l', col=1, main="Mean Steps by Interval", xlab="5-Minute Interval Number", ylab="Mean Number of Steps")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)
+
+```r
 #figure out which interval has the most number of steps:
 maxVal<-subset(avgSteps, avgSteps$steps==max(avgSteps$steps))
 ```
 The interval that had the highest number of steps was:
-```{r echo=FALSE}
-maxVal$interval
+
+```
+## [1] 835
 ```
 
 The Mean number of steps in that interval was:
-```{r echo=FALSE}
-maxVal$steps
+
+```
+## [1] 206.1698
 ```
 
 
 ## Imputing missing values
 The total number of rows with NA values is:
-```{r echo=TRUE}
+
+```r
 sum(is.na(activity$steps))
 ```
 
+```
+## [1] 2304
+```
+
 In order to estimate NA values, I will replace the NA value with the Mean value for that time interval:
-```{r echo=TRUE}
+
+```r
 #create another data set identical to Activity
 impActivity<-activity
 #go through and check for NA.  if NA, replace with mean for that time interval.
@@ -84,36 +102,42 @@ for(i in 1:nrow(impActivity)){
                 impActivity$steps[i]<-subMean$steps
         }
 }
-
 ```
 
 Recreate Histogram for total number of steps taken per day and generate new Mean and Median values:
-```{r echo=TRUE}
+
+```r
 ##calculate sums
 impSums<-ddply(impActivity, .(date), summarize, val = sum(steps))
 ##generate histogram
 hist(impSums$val, main="Imputed Steps taken Per Day", xlab="Total Steps Taken Per Day")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)
+
+```r
 ##calculate mean and median
 meanImpSteps<-mean(impSums$val)
 medianImpSteps<-median(impSums$val)
-
 ```
 
 The Mean Imputed number of steps per day is:
-```{r echo=FALSE}
-meanImpSteps
+
+```
+## [1] 10766.19
 ```
 
 The Median Imputed number of steps per day is:
-```{r echo=FALSE}
-medianImpSteps
+
+```
+## [1] 10766.19
 ```
 Based on this method, the total number of steps per day was greater (as would be expected). By substituting mean values for each interval, the effect to the daily mean and median values was minimal, which indicates that this method of imputing the data proves to be a good approach.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r echo=TRUE}
+
+```r
 ##First, add a factor variable for weekend or weekday in the data.
 
 weekPartFunc<-function(dateVal) {
@@ -140,8 +164,9 @@ ggplot(weekpartSteps, aes(interval, steps)) +
      facet_grid(weekPart ~ ., scales="fixed", space="fixed") +
      labs(x="Interval", y=expression("Steps")) +
      ggtitle("Steps per Interval:  Weekday vs Weekend")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)
 
 
 Based on the above plot, measured activity (steps) starts earlier during the week, but activity lasts longer in the day on the weekend.  There also appears to be fewer average steps taken in the weekend mornings as compared to weekday mornings.
